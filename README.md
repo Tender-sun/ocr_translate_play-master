@@ -1,8 +1,16 @@
-## 简介
+## lzu人工智能综合实践课程设计2022
+
+**作者：孙锐、李沛霖、魏楚扬**
+
 基于Tensorflow和Keras实现端到端的不定长中文字符检测和识别
 
 * 文本检测：CTPN
 * 文本识别：DenseNet + CTC
+
+基于Tensorflow和pyttsx3实现机器翻译和文本转语音输出
+
+- 机器翻译：Transformer
+- 语音输出：pyttsx3
 
 ## 环境部署
 ``` Bash
@@ -10,14 +18,7 @@ sh setup.sh
 ```
 * 注：CPU环境执行前需注释掉for gpu部分，并解开for cpu部分的注释
 
-## Demo
-将测试图片放入test_images目录，检测结果会保存到test_result中
-
-``` Bash
-python demo.py
-```
-
-## 模型训练
+## 模型训练---文字检测和文本识别
 
 ### CTPN训练
 详见ctpn/README.md
@@ -55,19 +56,21 @@ python train.py
 
 可参考[SynthText_Chinese_version](https://github.com/JarveeLee/SynthText_Chinese_version)，[TextRecognitionDataGenerator](https://github.com/Belval/TextRecognitionDataGenerator)和[text_renderer](https://github.com/Sanster/text_renderer)
 
-## 效果展示
+## 机器翻译
 
-<div>
-<img width="420" height="420" src="https://github.com/YCG09/chinese_ocr/blob/master/demo/demo_detect.jpg"/>
-<img width="420" height="420" src="https://github.com/YCG09/chinese_ocr/blob/master/demo/demo_rec.jpg"/>
-</div>
+翻译部分的训练因为数据集过大，而我们算力有限。故使用基于hugging团队预训练的模型进行处理数据。
 
-## 参考
+数据：opus  访问链接：https://opus.nlpl.eu/
 
-[1] https://github.com/eragonruan/text-detection-ctpn
+- 25种语音平行语料库
+- 预训练模型：hugging face  https://huggingface.co/
 
-[2] https://github.com/senlinuc/caffe_ocr
+## 项目快速复现
 
-[3] https://github.com/chineseocr/chinese-ocr
+将测试图片放入test_images目录，检测结果会保存到test_result中
 
-[4] https://github.com/xiaomaxiao/keras_ocr
+``` Bash
+python orc_translate_play.py
+```
+
+这一文件中将所有功能集成在一起，并将结果输出在res.txt文件中。
