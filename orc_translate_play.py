@@ -73,8 +73,6 @@ if __name__ == '__main__':
     with open('res.txt', 'a', encoding='utf-8') as r:
         r.write('fr:'+fr+'\n')
 
-
-
     '''
     下面实现最后一个任务：语音播放
     '''
