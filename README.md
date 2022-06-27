@@ -182,20 +182,20 @@ $$B\left(\pi_{5}\right)=B(-s t a-a t t e-e-)=\text { staatee }$$
 
 ****
 
-**CTC的训练过程**，本质上是通过梯度 $\frac{\partial p(l \mid x)}{\partial w}$ 调整LSTM的参数 $w$ ，使得对于输入样本为 $\pi \in B^{-1}(l)$ 时使得 $p(l \mid x)$ 取得最大。
+**CTC的训练过程**，本质上是通过梯度 $\frac{\partial p(l \mid x)}{\partial w}$ 调整LSTM的参数w ，使得对于输入样本为$\pi \in B^{-1}(l)$时使得 $p(l \mid x)$ 取得最大。
 
 ![image-20220626220830115](README.assets/image-20220626220830115.png)
 
-现在我们要做的事情就是: 通过梯度 $\frac{\partial p(l\mid x)}{\partial w}$ 调整LSTM的参数w ，使得对于输入样本为$\pi \in B^{-1}(z)$ 时有 $p(l \mid x)$取得最大。**所以如何计算梯度才是核心。**
-单独来看CTC输入 (即LSTM输出) $y$ 矩阵中的某一个值 $y_{k}^{t}$ (注意 $y_{k}^{t}$ 与 $y_{l_{k}}^{t}$ 含义相同，都是 在 $t$ 时 $\pi_{t}=l_{k}$ 的概率) :
+现在我们要做的事情就是: 通过梯度$\frac{\partial p(l\mid x)}{\partial w}$调整LSTM的参数w ，使得对于输入样本为$\pi \in B^{-1}(z)$ 时有 $p(l\mid x)$取得最大。**所以如何计算梯度才是核心。**
+单独来看CTC输入 (即LSTM输出)**y**矩阵中的某一个值$y_{k}^{t}$ (注意$y_{k}^{t}$ 与 $y_{l_{k}}^{t}$ 含义相同，都是在t时$\pi_{t}=l_{k}$ 的概率) :
 
 $$\frac{\partial p(l \mid x)}{\partial y_{k}^{t}}=\frac{\partial \sum_{\pi \in B^{-1}(l), \pi_{t}=l_{k}} \frac{\alpha_{t}\left(l_{k}\right)\beta_{t}\left(l_{k}\right)}{y_{l_{k}}^{t}}}{\partial y_{l_{k}}^{t}}=-\frac{\sum_{\pi \in B^{-1}(l), \pi_{t}=l_{k}}\alpha_{t}\left(l_{k}\right) \beta_{t}\left(l_{k}\right)}{\left(y_{l_{k}}^{t}\right)^{2}}$$
 
-上式中的 $\alpha_{t}\left(l_{k}\right) \beta_{t}\left(l_{k}\right)$ 是通过递推计算的常数，任何时候都可以通过递推快速获得，那么即可 快速计算梯度 $\frac{\partial p(l \mid x)}{\partial y_{k}^{t}}$ ，之后按照梯度训练即可。
+上式中的$\alpha_{t}\left(l_{k}\right) \beta_{t}\left(l_{k}\right)$ 是通过递推计算的常数，任何时候都可以通过递推快速获得，那么即可快速计算梯度$\frac{\partial p(l \mid x)}{\partial y_{k}^{t}}$ ，之后按照梯度训练即可。
 
 
 
-在我们任务种我们使用DenseNet作为基础网络****Dense convolution layer with Up-Sampling block
+在我们任务种我们使用DenseNet作为基础网络**Dense convolution layer with Up-Sampling block**
 
 1. 首先通过dense block提取原始密集CNN特征
 
@@ -217,8 +217,8 @@ $$\frac{\partial p(l \mid x)}{\partial y_{k}^{t}}=\frac{\partial \sum_{\pi \in B
 
 **模块2、Multi-Head Attention**
 
-这里我们看看multi-head attention中的 multi-head是什么意思。我们假设 $d_{\text {model }}=512, h=8(8$ 个头) , 说下transformer中是怎么 处理的:
-前面我们说过了， $Q 、 K 、 V$ 三个矩阵是encoder的输入经过三个linear映射而成，它们的大小是 $[B, L, D]$ (batch size, max sentence length, embedding size), 这里为了说的清楚些，我们暂时不看 $[B]$ 这个维度。那么 $Q 、 K 、 V$ 的维度都为 $[L, D]$ ， multi-head就 是在 $[D]$ 维度上对数据进行切割，把数据切成等长的 $8 \mathrm{c}_{殳}(h=8)$ ，这样 $Q 、 K 、 V$ 均被切成等长的 8 段，然后对应的 $Q 、 K 、 V$ 子段组 成一组，每组通过 Scaled Dot-Product Attention 算法 计算出结果，这样的结果我们会得到8个，然后把这8个结果再拼成一个结果，就 multi-head的结果。具体过程如下图:
+这里我们看看multi-head attention中的 multi-head是什么意思。我们假设$d_{\text {model }}=512, h=8(8$ 个头) , 说下transformer中是怎么 处理的:
+前面我们说过了， $Q 、 K 、 V$ 三个矩阵是encoder的输入经过三个linear映射而成，它们的大小是$[B, L, D]$ (batch size, max sentence length, embedding size), 这里为了说的清楚些，我们暂时不看**B** 这个维度。那么 $Q 、 K 、 V$ 的维度都为$[L, D]$ ， multi-head就 是在**D** 维度上对数据进行切割，把数据切成等长的 8段(h=8) ，这样$Q 、 K 、 V$ 均被切成等长的 8 段，然后对应的$Q 、 K 、 V$ 子段组 成一组，每组通过 Scaled Dot-Product Attention 算法 计算出结果，这样的结果我们会得到8个，然后把这8个结果再拼成一个结果，就 multi-head的结果。具体过程如下图:
 
 <img src="https://img-blog.csdnimg.cn/20201207184238383.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L25vY21s,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述" style="zoom: 33%;" />
 
@@ -228,7 +228,7 @@ $$\frac{\partial p(l \mid x)}{\partial y_{k}^{t}}=\frac{\partial \sum_{\pi \in B
 
 **模块4、Layer Normalization**
 
-不论是layer normalization $Q$ 还是batch normalization，其实做的都是一件事情，都是根据 $x=a * \frac{x-\bar{x}}{s t d+e p s}+b$ 对 $x$ 的分布进行调整。不同的是 $\bar{x}$ 和 $s t d$ 的计算方式不同。如下图:
+不论是layer normalization还是batch normalization，其实做的都是一件事情，都是根据 $x=a * \frac{x-\bar{x}}{s t d+e p s}+b$ 对**x**的分布进行调整。不同的是$\bar{x}$ 和$s t d$ 的计算方式不同。如下图:
 
 <img src="https://img-blog.csdnimg.cn/20201207160945319.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L25vY21s,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述" style="zoom:50%;" />
 
