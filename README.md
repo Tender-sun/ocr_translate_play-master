@@ -85,24 +85,20 @@ python orc_translate_play.py
 
 输入N副Images：
 
-- 首先VGG提取特征，获得大小为$N*C*H*W$的conv5 feature map
+- 首先VGG提取特征，获得大小为$N * C * H * W $的conv5 feature map
 
-- 之后在conv5上做$3 * 3$的滑动窗口，即每个点都结合周围$3*3$区域特征获得一个长度为$3 * 3*C$的特征向量。*
+- 之后在conv5上做$ 3 * 3$的滑动窗口，即每个点都结合周围$ 3 * 3 $区域特征获得一个长度为$ 3 * 3 * C$的特征向量。*
 
-  $输出为N*9C*H*W的feature_map，该特征 显然只有CNN学习到的空间特征。$
+  输出为$N * 9 C * H * W $的feature_map，该特征 显然只有CNN学习到的空间特征。
 
 - 再将这个feature map进行Reshape为以下维度:
-  $$
-  \text { Reshape: } N \times 9 C \times H \times W \rightarrow(N H) \times W \times 9 C
-  $$
+  $$\text { Reshape: } N \times 9 C \times H \times W \rightarrow(N H) \times W \times 9 C$$
 
 - 然后以$Batch=NH$且最大时间长度$T_max=W$的数据流输入双向LSTM，学习每一行的序列特征。双向LSTM输出，再经Reshape恢复形状：
-  $$
-  \text { Reshape: }(N H) \times W \times 256 \rightarrow N \times 256 \times H \times W
-  $$
+  $$\text { Reshape: }(N H) \times W \times 256 \rightarrow N \times 256 \times H \times W$$
   此时该特征既包含空间特征，也包含了LSTM学习到的序列特征。
 
-- 然后经过“FC”全连接层，变为$N*512*H*W$的特征
+- 然后经过“FC”全连接层，变为$ N * 512 * H * W $的特征
 
 - 最后经过类似Faster R-CNN的RPN网络，得到三个输出：2k个垂直坐标系（矩形框的中心位置和高度）、2k个score（text和non-text各有一个分数）、k个side-refinement（用于精修文本行的两个端点，表示每个proposal的水平平移量），得到text proposals。
 
@@ -118,12 +114,8 @@ python orc_translate_play.py
 **1.2、竖直Anchor定位文字位置**
 
 CTPN针对于横向排列的文字检测，所以采用一组（10个）等宽度的Anchors用于定位文字位置。
-$$
-\begin{gathered}
-\text { widths }=[16] \\
-\text { heights }=[11,16,23,33,48,68,97,139,198,283]
-\end{gathered}
-$$
+$$\text { widths }=[16] $$
+$$\text { heights }=[11,16,23,33,48,68,97,139,198,283]$$
 这样设置的目的：
 
 - 保证在x方向上，Anchor覆盖原图每个点且不相互重叠。
@@ -179,13 +171,9 @@ RCNN：论文中采用的循环神经网络为BiLSTM，通过长短期记忆消�
 我们的主要目的就是用循环神经网络标记无分段序列数据，引入blank字符，解决有些位置没有字符的问题
 
 通过递推，快速计算梯度。这样模型可以判断出连续字符的使用。就比如
-$$
-\begin{gathered}
-B\left(\pi_{1}\right)=B(--s t t a-t--e)=\text { state } \\
-B\left(\pi_{2}\right)=B(s s t-a a a-t e e-)=\text { state } \\
-B\left(\pi_{5}\right)=B(-s t a-a t t e-e-)=\text { staatee }
-\end{gathered}
-$$
+$$B\left(\pi_{1}\right)=B(--s t t a-t--e)=\text { state } $$
+$$B\left(\pi_{2}\right)=B(s s t-a a a-t e e-)=\text { state } $$
+$$B\left(\pi_{5}\right)=B(-s t a-a t t e-e-)=\text { staatee }$$
 简单来说就是遵循原则
 
 - 一是空格前后要隔开，
@@ -198,11 +186,11 @@ $$
 
 ![image-20220626220830115](README.assets/image-20220626220830115.png)
 
-现在我们要做的事情就是: 通过梯度 $\frac{\partial p(l \mid x)}{\partial w}$ 调整LSTM的参数 $w$ ，使得对于输入样本为 $\pi \in B^{-1}(z)$ 时有 $p(l \mid x)$ 取得最大。**所以如何计算梯度才是核心。**
+现在我们要做的事情就是: 通过梯度 $\frac{\partial p(l\mid x)}{\partial w}$ 调整LSTM的参数w ，使得对于输入样本为$\pi \in B^{-1}(z)$ 时有 $p(l \mid x)$取得最大。**所以如何计算梯度才是核心。**
 单独来看CTC输入 (即LSTM输出) $y$ 矩阵中的某一个值 $y_{k}^{t}$ (注意 $y_{k}^{t}$ 与 $y_{l_{k}}^{t}$ 含义相同，都是 在 $t$ 时 $\pi_{t}=l_{k}$ 的概率) :
-$$
-\frac{\partial p(l \mid x)}{\partial y_{k}^{t}}=\frac{\partial \sum_{\pi \in B^{-1}(l), \pi_{t}=l_{k}} \frac{\alpha_{t}\left(l_{k}\right) \beta_{t}\left(l_{k}\right)}{y_{l_{k}}^{t}}}{\partial y_{l_{k}}^{t}}=-\frac{\sum_{\pi \in B^{-1}(l), \pi_{t}=l_{k}} \alpha_{t}\left(l_{k}\right) \beta_{t}\left(l_{k}\right)}{\left(y_{l_{k}}^{t}\right)^{2}}
-$$
+
+$$\frac{\partial p(l \mid x)}{\partial y_{k}^{t}}=\frac{\partial \sum_{\pi \in B^{-1}(l), \pi_{t}=l_{k}} \frac{\alpha_{t}\left(l_{k}\right)\beta_{t}\left(l_{k}\right)}{y_{l_{k}}^{t}}}{\partial y_{l_{k}}^{t}}=-\frac{\sum_{\pi \in B^{-1}(l), \pi_{t}=l_{k}}\alpha_{t}\left(l_{k}\right) \beta_{t}\left(l_{k}\right)}{\left(y_{l_{k}}^{t}\right)^{2}}$$
+
 上式中的 $\alpha_{t}\left(l_{k}\right) \beta_{t}\left(l_{k}\right)$ 是通过递推计算的常数，任何时候都可以通过递推快速获得，那么即可 快速计算梯度 $\frac{\partial p(l \mid x)}{\partial y_{k}^{t}}$ ，之后按照梯度训练即可。
 
 
